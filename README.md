@@ -7,7 +7,7 @@
 在 Claude Code 中添加本 marketplace（仓库推送到 GitHub 后）：
 
 ```text
-/plugin marketplace add wsq961/cc-marketplace
+/plugin marketplace add myWsq/cc-marketplace
 ```
 
 > 也可以用本地路径调试：`/plugin marketplace add /Users/wsq/Workspace/cc-marketplace`
