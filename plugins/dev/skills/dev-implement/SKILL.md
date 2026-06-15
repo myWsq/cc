@@ -3,7 +3,7 @@ name: dev-implement
 description: 读取 dev-plan 写在 plans/ 里的一份实现计划,在当前分支把它落地:默认由主 agent 自己逐步实现并勤提交;也可委派外部 agent(codex / cursor)实现,再由主 agent 评审其 diff(重跑完成标准、查范围、读代码),给出 APPROVE/REVISE/BLOCK。当用户要求执行/落地某个计划("实现 plans/001""用 codex 跑 003""委派 cursor 实现那个 plan""execute 002")时使用。
 metadata:
   author: Shuaiqi Wang
-  version: "0.2.0"
+  version: "0.2.1"
 ---
 
 # dev-implement
@@ -62,7 +62,7 @@ metadata:
 
   排序上让代码库在步骤间尽量可用(先加新路径、再切调用方、最后删旧路径)。
 
-- **委派** —— 按 [references/backends.md](references/backends.md) 给选定后端构造 prompt(执行者前导 + **计划全文内联** + 硬规则 3/7 的副本 + 报告格式)并发出。等它跑完,拿到它的报告。
+- **委派** —— 按 [references/backends.md](references/backends.md):把派发 prompt(执行者前导 + **计划全文内联** + 硬规则 3/7 的副本)写进一个临时文件,再调 `scripts/dispatch.sh <后端> <仓库根> <prompt文件> [模型]` 派发。**固定参数(yolo / 工作目录 / 输出)都在脚本里,你只管拼 prompt。** 脚本 stdout 是后端的报告——**仅供参考**,真正的评审依据是下一步的 `git diff <基线>..HEAD`。
 
 ### 第 5 步 — 验证
 
