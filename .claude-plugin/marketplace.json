@@ -21,7 +21,7 @@
     {
       "name": "dev",
       "source": "./plugins/dev",
-      "description": "开发辅助插件：dev-explore 摸清代码地形并钉死需求，dev-write-plan 写成自包含实现计划，dev-execute-plan 在当前分支落地——默认主 agent 自己实现，也可委派 codex / cursor 实现再由主 agent 评审。三者可单独使用，顺跑时链式交接（shadcn/improve 的拆分版）。",
+      "description": "开发辅助插件：dev-explore 摸清代码地形并澄清需求，dev-write-plan 写成自包含实现计划，dev-execute-plan 在当前分支落地——默认主 agent 自己实现，也可委派 codex / cursor 实现再由主 agent 评审。三者可单独使用，顺跑时链式交接（shadcn/improve 的拆分版）。",
       "version": "0.3.0",
       "author": {
         "name": "Shuaiqi Wang"
