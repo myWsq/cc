@@ -1,4 +1,4 @@
-# cc-marketplace
+# cc
 
 这是一个 Claude Code 插件市场,由 agent 维护。根目录的 `.claude-plugin/marketplace.json` 是插件清单,所有插件放在 `plugins/<名字>/`。
 
