@@ -17,6 +17,15 @@
       "author": {
         "name": "Shuaiqi Wang"
       }
+    },
+    {
+      "name": "dev",
+      "source": "./plugins/dev",
+      "description": "开发辅助插件：dev-plan 把需求写成自包含实现计划，dev-implement 逐步执行并勤提交（shadcn/improve 的简化版）。",
+      "version": "0.1.0",
+      "author": {
+        "name": "Shuaiqi Wang"
+      }
     }
   ]
 }
