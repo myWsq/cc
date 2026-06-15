@@ -1,6 +1,6 @@
 # 外部执行后端调用契约
 
-给 dev-implement 的**委派**步骤用。默认的「自己实现」由主 agent 直接干,不走这里。
+给 dev-execute-plan 的**委派**步骤用。默认的「自己实现」由主 agent 直接干,不走这里。
 
 委派时主 agent 只做两件事:**拼 prompt → 调 dispatch.sh**。所有固定参数(yolo、工作目录、输出)都封装在 `scripts/dispatch.sh` 里,你不用记 codex/cursor 各自的 flag。
 
@@ -29,7 +29,7 @@ STATUS / STEPS(逐步 done|skipped + 验证结果)/ FILES CHANGED / COMMITS / NO
 ## 二、派发:dispatch.sh
 
 ```
-bash "${CLAUDE_PLUGIN_ROOT}/skills/dev-implement/scripts/dispatch.sh" \
+bash "${CLAUDE_PLUGIN_ROOT}/skills/dev-execute-plan/scripts/dispatch.sh" \
   <codex|cursor> <仓库根绝对路径> "$PF" [模型]
 ```
 

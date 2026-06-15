@@ -1,14 +1,14 @@
 ---
-name: dev-implement
-description: 读取 dev-plan 写在 plans/ 里的一份实现计划,在当前分支把它落地:默认由主 agent 自己逐步实现并勤提交;也可委派外部 agent(codex / cursor)实现,再由主 agent 评审其 diff(重跑完成标准、查范围、读代码),给出 APPROVE/REVISE/BLOCK。当用户要求执行/落地某个计划("实现 plans/001""用 codex 跑 003""委派 cursor 实现那个 plan""execute 002")时使用。
+name: dev-execute-plan
+description: 读取 dev-write-plan 写在 plans/ 里的一份实现计划,在当前分支把它落地:默认由主 agent 自己逐步实现并勤提交;也可委派外部 agent(codex / cursor)实现,再由主 agent 评审其 diff(重跑完成标准、查范围、读代码),给出 APPROVE/REVISE/BLOCK。当用户要求执行/落地某个计划("实现 plans/001""用 codex 跑 003""委派 cursor 实现那个 plan""execute 002")时使用。
 metadata:
   author: Shuaiqi Wang
   version: "0.2.1"
 ---
 
-# dev-implement
+# dev-execute-plan
 
-你的任务:拿一份 [dev-plan](../dev-plan/SKILL.md) 写好的实现计划,在**当前分支**把它落地并验证。两种执行方式:
+你的任务:拿一份 [dev-write-plan](../dev-write-plan/SKILL.md) 写好的实现计划,在**当前分支**把它落地并验证。两种执行方式:
 
 - **自己实现(默认)** —— 主 agent 直接按计划逐步改代码、勤提交、过每一道验证关卡,收尾自检。
 - **委派外部 agent(codex / cursor)** —— 把"写代码"外包给一个外部子进程,它在当前分支改代码 + 提交;完事后你像 tech lead 评审它产生的 diff,裁决 APPROVE / REVISE / BLOCK。
@@ -40,7 +40,7 @@ metadata:
 - 用户点名 codex / cursor 才委派(`用 codex 实现 003`、`委派 cursor`)。委派前跑探测脚本确认本机装了:
 
   ```
-  bash "${CLAUDE_PLUGIN_ROOT}/skills/dev-implement/scripts/detect-backends.sh"
+  bash "${CLAUDE_PLUGIN_ROOT}/skills/dev-execute-plan/scripts/detect-backends.sh"
   ```
 
   它输出可用清单 + 机器可读的 `BACKENDS=...` / `DEFAULT=...`。点名的后端不在 `BACKENDS` 里(没装/探测不到)就**停下**,给出实际可选项,让对方改选或先装上——别假装派发了,也别擅自改回自己实现。
@@ -51,7 +51,7 @@ metadata:
 1. `git status --porcelain` → 必须为空(硬规则 1)。
 2. **记录基线**:`git rev-parse HEAD` → 存下这个 SHA。
 3. 确认是 git 仓库。
-4. **跑计划里的 Drift 检查**(`git diff --stat <Planned-at SHA>..HEAD -- <in-scope 路径>`)。若 in-scope 文件自计划写就后有改动,把"当前状态"摘录和实际代码逐一对比;对不上就当 STOP——停下,建议先用 dev-plan 刷新计划。
+4. **跑计划里的 Drift 检查**(`git diff --stat <Planned-at SHA>..HEAD -- <in-scope 路径>`)。若 in-scope 文件自计划写就后有改动,把"当前状态"摘录和实际代码逐一对比;对不上就当 STOP——停下,建议先用 dev-write-plan 刷新计划。
 
 ### 第 4 步 — 执行
 
@@ -88,7 +88,7 @@ metadata:
 |------|------|------|
 | **APPROVE** | 完成标准全过、范围干净、质量过关 | 进入第 7 步收尾。 |
 | **REVISE** | 可修的缺口 | 把具体、可操作的反馈打回**同一外部后端**(见 backends.md 的修订方式)。**最多 2 轮**,再不行就 BLOCK。每轮修订后回第 5 步重审。 |
-| **BLOCK** | 命中 STOP、范围不可挽回地越界、或修订耗尽 | `plans/README.md` 标 BLOCKED + 一行原因。建议用 dev-plan 据所学刷新/重写计划。告诉用户发生了什么。已提交的工作留在分支,不回滚。 |
+| **BLOCK** | 命中 STOP、范围不可挽回地越界、或修订耗尽 | `plans/README.md` 标 BLOCKED + 一行原因。建议用 dev-write-plan 据所学刷新/重写计划。告诉用户发生了什么。已提交的工作留在分支,不回滚。 |
 
 ### 第 7 步 — 收尾(仅 COMPLETE / APPROVE)
 

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 #
-# detect-backends.sh — 探测本机可用的 dev-implement 执行方式。
+# detect-backends.sh — 探测本机可用的 dev-execute-plan 执行方式。
 #
-# dev-implement 在「选执行方式」那步跑它:根据机器实际装了哪些 agent CLI,
+# dev-execute-plan 在「选执行方式」那步跑它:根据机器实际装了哪些 agent CLI,
 # 给出可选项,免得把任务委派给一个根本没装的后端。只读探测,不改任何东西。
 #
 # 三种执行方式:
-#   self    主 agent 自己实现 —— 默认。就是跑 dev-implement 的这个 Claude 直接动手,
+#   self    主 agent 自己实现 —— 默认。就是跑 dev-execute-plan 的这个 Claude 直接动手,
 #           不依赖任何二进制,所以恒列为可用。
 #   codex   codex exec        —— 委派给外部子进程,需要 `codex` 在 PATH 上。
 #   cursor  cursor-agent      —— 委派给外部子进程,需要 `cursor-agent` 在 PATH 上。
@@ -28,7 +28,7 @@ first_version_line() {
 
 available=("self") # self 恒可用
 
-echo "dev-implement 执行方式探测"
+echo "dev-execute-plan 执行方式探测"
 echo "=========================="
 echo
 
