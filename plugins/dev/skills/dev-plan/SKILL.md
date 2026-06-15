@@ -3,7 +3,7 @@ name: dev-plan
 description: 把一个开发需求变成一份自包含、可执行的实现计划,写到仓库的 plans/ 目录,交给 dev-implement(或任何 agent)去落地。只读代码、绝不直接改源码。当用户描述了一个想做的改动/功能/修复,并希望先出方案而不是立刻动手,或明确要求"做个计划""规划一下"时使用。
 metadata:
   author: Shuaiqi Wang
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # dev-plan
@@ -27,10 +27,10 @@ metadata:
 
 动手规划前先摸清地形:
 
-- 读 `README`、`CLAUDE.md`/`AGENTS.md`、根配置(`package.json`、`pyproject.toml`、`go.mod` 等)、CI 配置、目录结构。
+- 读 `README`、`CLAUDE.md`/`AGENTS.md`、`CONTRIBUTING`、根配置(`package.json`、`pyproject.toml`、`go.mod` 等)、CI 配置、目录结构。
 - 弄清:语言/框架/包管理器、**怎么 build / test / lint / typecheck(精确命令——它们会作为每个计划的验证关卡)**、测试形态。
 - 记录仓库约定:代码风格、命名、目录布局、错误处理与状态管理模式。计划要让执行者**对齐**这些约定,并给出范例文件。
-- 找设计/意图文档(ADR、`DESIGN.md`、`CONTEXT.md` 等)若存在则读,理解已定的取舍——别把已决定的事当成问题。
+- 找设计/意图文档(ADR、`DESIGN.md`、`CONTEXT.md` 等)若存在则读,理解已定的取舍——别把已决定的事当成问题;若有 `CONTEXT.md`(领域词汇)/`DESIGN.md`(设计系统),计划里的命名与结构要对齐它们,并给范例指针。
 - 必要时看 git 信号(`git log --oneline -20`、改动热点),判断哪里在活跃演进。
 
 如果仓库没有可用的验证命令(没测试、build 坏了),记下来——"先建立验证基线"往往是计划里的第一步。
