@@ -4,6 +4,10 @@
 
 ## 安装
 
+两种方式,任选其一。
+
+**作为 npx skills**(与具体 agent 解耦,可单装):
+
 ```bash
 # 装全部三个
 npx skills add myWsq/dev-skills
@@ -13,6 +17,13 @@ npx skills add myWsq/dev-skills --skill dev-explore
 ```
 
 `--list` 先看仓库里有哪些 skill;`-g` 装到用户级(跨项目可用)。
+
+**作为 Claude Code 插件市场**(整体装为 `dev` 插件,含全部三个 skill):
+
+```text
+/plugin marketplace add myWsq/dev-skills
+/plugin install dev@dev-skills
+```
 
 ## 三个 skill
 

@@ -1,0 +1,17 @@
+{
+  "name": "dev-skills",
+  "owner": {
+    "name": "Shuaiqi Wang",
+    "email": "wsq961@outlook.com"
+  },
+  "metadata": {
+    "description": "计划驱动开发的 agent skills:探路 → 写计划 → 执行计划。"
+  },
+  "plugins": [
+    {
+      "name": "dev",
+      "source": "./",
+      "description": "计划驱动开发三件套:dev-explore 摸清代码地形并澄清需求,dev-write-plan 写成自包含实现计划,dev-execute-plan 在当前分支落地。三者可单独使用,顺跑时链式交接。"
+    }
+  ]
+}
