@@ -29,7 +29,8 @@ STATUS / STEPS(逐步 done|skipped + 验证结果)/ FILES CHANGED / COMMITS / NO
 ## 二、派发:dispatch.sh
 
 ```
-bash "${CLAUDE_PLUGIN_ROOT}/skills/dev-execute-plan/scripts/dispatch.sh" \
+# dispatch.sh 在本 skill 目录(含本 SKILL.md 的那个目录)的 scripts/ 下,用其绝对路径跑:
+bash "<此 skill 目录的绝对路径>/scripts/dispatch.sh" \
   <codex|cursor> <仓库根绝对路径> "$PF" [模型]
 ```
 

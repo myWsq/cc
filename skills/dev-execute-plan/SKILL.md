@@ -8,7 +8,7 @@ metadata:
 
 # dev-execute-plan
 
-你的任务:拿一份 [dev-write-plan](../dev-write-plan/SKILL.md) 写好的实现计划,在**当前分支**把它落地并验证。两种执行方式:
+你的任务:拿一份配套 skill `dev-write-plan` 写好的实现计划,在**当前分支**把它落地并验证。两种执行方式:
 
 - **自己实现(默认)** —— 主 agent 直接按计划逐步改代码、勤提交、过每一道验证关卡,收尾自检。
 - **委派外部 agent(codex / cursor)** —— 把"写代码"外包给一个外部子进程,它在当前分支改代码 + 提交;完事后你像 tech lead 评审它产生的 diff,裁决 APPROVE / REVISE / BLOCK。
@@ -37,10 +37,10 @@ metadata:
 ### 第 2 步 — 选执行方式
 
 - 默认 **自己实现**(主 agent 直接干,始终可用)。
-- 用户点名 codex / cursor 才委派(`用 codex 实现 003`、`委派 cursor`)。委派前跑探测脚本确认本机装了:
+- 用户点名 codex / cursor 才委派(`用 codex 实现 003`、`委派 cursor`)。委派前跑探测脚本确认本机装了。脚本就在**本 skill 目录**(含本 SKILL.md 的那个目录)的 `scripts/` 下,用它的绝对路径跑:
 
   ```
-  bash "${CLAUDE_PLUGIN_ROOT}/skills/dev-execute-plan/scripts/detect-backends.sh"
+  bash "<此 skill 目录的绝对路径>/scripts/detect-backends.sh"
   ```
 
   它输出可用清单 + 机器可读的 `BACKENDS=...` / `DEFAULT=...`。点名的后端不在 `BACKENDS` 里(没装/探测不到)就**停下**,给出实际可选项,让对方改选或先装上——别假装派发了,也别擅自改回自己实现。

@@ -1,9 +1,0 @@
-{
-  "name": "hello-world",
-  "description": "示例插件：包含一个 skill 和一个 command，用作新插件的模板。",
-  "version": "0.1.0",
-  "author": {
-    "name": "Shuaiqi Wang",
-    "email": "wsq961@outlook.com"
-  }
-}
