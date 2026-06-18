@@ -1,6 +1,6 @@
 # dev-skills
 
-一组计划驱动开发的 agent skills:**探路 → 写计划 → 执行计划**。通过 [`npx skills`](https://github.com/vercel-labs/skills) 分发,与具体 agent 解耦——Claude Code、Codex、Cursor、OpenCode 等都能装。
+一组计划驱动开发的 agent skills:**探路 → 写计划 → 执行计划**。通过 [`npx skills`](https://github.com/vercel-labs/skills) 分发,与具体 agent 解耦——Claude Code、Codex、Cursor、OpenCode 等都能装。也可以作为 Claude Code / Codex 的插件市场整体安装。
 
 ## 安装
 
@@ -23,6 +23,13 @@ npx skills add myWsq/dev-skills --skill dev-explore
 ```text
 /plugin marketplace add myWsq/dev-skills
 /plugin install dev@dev-skills
+```
+
+**作为 Codex 插件市场**(整体装为 `dev` 插件,含全部三个 skill):
+
+```bash
+codex plugin marketplace add myWsq/dev-skills
+codex plugin add dev@dev-skills
 ```
 
 ## 三个 skill
