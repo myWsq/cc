@@ -6,9 +6,9 @@
 
 This repository supports three distribution paths:
 
-- install individual skills with [`npx skills`](https://github.com/vercel-labs/skills);
+- install the bundled `dev` plugin from a Codex plugin marketplace;
 - install the bundled `dev` plugin from a Claude Code plugin marketplace;
-- install the bundled `dev` plugin from a Codex plugin marketplace.
+- install individual skills with [`npx skills`](https://github.com/vercel-labs/skills) when you only need part of the workflow.
 
 ## Skills
 
@@ -26,7 +26,27 @@ dev-explore -> dev-write-plan -> dev-execute-plan
 
 ## Installation
 
-### Install with `npx skills`
+### Install as a Codex plugin
+
+```bash
+codex plugin marketplace add myWsq/dev-skills
+codex plugin add dev@dev-skills
+```
+
+This installs a plugin named `dev` that includes all three skills in this repository.
+
+### Install as a Claude Code plugin
+
+```text
+/plugin marketplace add myWsq/dev-skills
+/plugin install dev@dev-skills
+```
+
+This installs a plugin named `dev` that includes all three skills in this repository.
+
+### Install individual skills with `npx skills`
+
+Use this path when you only want one skill, or when your agent consumes plain `SKILL.md` directories directly.
 
 Install all skills:
 
@@ -45,24 +65,6 @@ Useful options:
 - `--list`: list the skills available in this repository.
 - `-g`: install globally for reuse across projects.
 
-### Install as a Claude Code plugin
-
-```text
-/plugin marketplace add myWsq/dev-skills
-/plugin install dev@dev-skills
-```
-
-This installs a plugin named `dev` that includes all three skills in this repository.
-
-### Install as a Codex plugin
-
-```bash
-codex plugin marketplace add myWsq/dev-skills
-codex plugin add dev@dev-skills
-```
-
-This installs a plugin named `dev` that includes all three skills in this repository.
-
 ## Usage
 
 Use `dev-explore` when the requirement is still unclear, the relevant code path is uncertain, or you need to understand the existing architecture and validation workflow first. This skill is read-only: it does not create plan files or modify source code.
@@ -70,53 +72,6 @@ Use `dev-explore` when the requirement is still unclear, the relevant code path 
 Use `dev-write-plan` when the requirement is clear enough to turn into executable steps for an agent. The generated plan includes scope, steps, validation commands, completion criteria, and stop conditions.
 
 Use `dev-execute-plan` when an implementation plan already exists under `plans/` and should be applied on the current branch. It checks the working tree, follows the plan, and uses commits plus diffs as review boundaries.
-
-## Repository Layout
-
-```text
-skills/
-  dev-explore/
-  dev-write-plan/
-  dev-execute-plan/
-.claude-plugin/
-  marketplace.json
-  plugin.json
-.agents/plugins/
-  marketplace.json
-plugins/dev/
-  .codex-plugin/plugin.json
-  skills/
-```
-
-The top-level `skills/` directory is the source used by `npx skills` and the Claude Code plugin. The Codex plugin uses `plugins/dev/skills/`, which is a checked-in copy of the same skills because Codex plugin packaging does not currently follow symlinks for this layout.
-
-## Compatibility
-
-Each skill is a standard `skills/<name>/SKILL.md` directory. Helper scripts and reference documents live inside the same skill directory so they are included across installation methods.
-
-The `SKILL.md` frontmatter uses the common `name` and `description` fields. Skills refer to companion skills by name rather than cross-directory relative paths, so a single skill can still work when installed on its own.
-
-## Maintenance
-
-When changing a skill, update the top-level `skills/` directory first, then sync the Codex plugin copy:
-
-```bash
-rm -rf plugins/dev/skills
-cp -R skills plugins/dev/skills
-```
-
-Before publishing, run at least:
-
-```bash
-npx skills add . --list
-python3 ~/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py plugins/dev
-```
-
-If Claude Code plugin metadata changed, also run:
-
-```bash
-claude plugin validate .
-```
 
 ## License
 

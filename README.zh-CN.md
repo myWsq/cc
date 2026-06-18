@@ -6,9 +6,9 @@
 
 本仓库支持三种分发方式：
 
-- 通过 [`npx skills`](https://github.com/vercel-labs/skills) 按 skill 安装；
+- 作为 Codex 插件市场中的 `dev` 插件安装；
 - 作为 Claude Code 插件市场中的 `dev` 插件安装；
-- 作为 Codex 插件市场中的 `dev` 插件安装。
+- 只需要部分流程时，通过 [`npx skills`](https://github.com/vercel-labs/skills) 按 skill 安装。
 
 ## Skills
 
@@ -26,7 +26,27 @@ dev-explore -> dev-write-plan -> dev-execute-plan
 
 ## 安装
 
-### 通过 `npx skills` 安装
+### 作为 Codex 插件安装
+
+```bash
+codex plugin marketplace add myWsq/dev-skills
+codex plugin add dev@dev-skills
+```
+
+安装后会得到名为 `dev` 的插件，包含本仓库的三个 skills。
+
+### 作为 Claude Code 插件安装
+
+```text
+/plugin marketplace add myWsq/dev-skills
+/plugin install dev@dev-skills
+```
+
+安装后会得到名为 `dev` 的插件，包含本仓库的三个 skills。
+
+### 通过 `npx skills` 安装单个 skill
+
+当你只需要某一个 skill，或目标 agent 直接消费普通 `SKILL.md` 目录时，使用这种方式。
 
 安装全部 skills：
 
@@ -45,24 +65,6 @@ npx skills add myWsq/dev-skills --skill dev-explore
 - `--list`：查看仓库内可安装的 skills；
 - `-g`：安装到用户级目录，跨项目复用。
 
-### 作为 Claude Code 插件安装
-
-```text
-/plugin marketplace add myWsq/dev-skills
-/plugin install dev@dev-skills
-```
-
-安装后会得到名为 `dev` 的插件，包含本仓库的三个 skills。
-
-### 作为 Codex 插件安装
-
-```bash
-codex plugin marketplace add myWsq/dev-skills
-codex plugin add dev@dev-skills
-```
-
-安装后会得到名为 `dev` 的插件，包含本仓库的三个 skills。
-
 ## 使用建议
 
 当需求还不清晰、涉及的代码路径不明确，或者需要先确认现有架构和验证方式时，使用 `dev-explore`。该 skill 只读代码，不创建计划文件，也不修改源码。
@@ -70,53 +72,6 @@ codex plugin add dev@dev-skills
 当需求已经清楚，需要把它转换成可交给 agent 执行的步骤时，使用 `dev-write-plan`。生成的计划会包含范围、步骤、验证命令、完成标准和停止条件。
 
 当 `plans/` 下已经有实现计划，需要在当前分支落地时，使用 `dev-execute-plan`。它会检查工作区状态，按计划执行，并用提交记录和 diff 作为后续评审边界。
-
-## 仓库结构
-
-```text
-skills/
-  dev-explore/
-  dev-write-plan/
-  dev-execute-plan/
-.claude-plugin/
-  marketplace.json
-  plugin.json
-.agents/plugins/
-  marketplace.json
-plugins/dev/
-  .codex-plugin/plugin.json
-  skills/
-```
-
-顶层 `skills/` 是 `npx skills` 和 Claude Code 插件使用的源目录。Codex 插件使用 `plugins/dev/skills/`，这是顶层 `skills/` 的受控副本；当前 Codex 插件打包流程不会在该布局下跟随指向顶层目录的符号链接。
-
-## 兼容性
-
-每个 skill 都是标准的 `skills/<name>/SKILL.md` 目录。辅助脚本和参考文档放在同一个 skill 目录下，确保通过不同安装方式分发时能一起带上。
-
-`SKILL.md` frontmatter 使用通用的 `name` 和 `description` 字段。skill 之间通过名称互相引用，而不是依赖跨目录相对路径，因此单独安装某一个 skill 时也能保持基本可用。
-
-## 维护
-
-修改 skill 时，先更新顶层 `skills/`，再同步 Codex 插件副本：
-
-```bash
-rm -rf plugins/dev/skills
-cp -R skills plugins/dev/skills
-```
-
-发布前建议至少执行：
-
-```bash
-npx skills add . --list
-python3 ~/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py plugins/dev
-```
-
-如果修改了 Claude Code 插件元数据，也执行：
-
-```bash
-claude plugin validate .
-```
 
 ## 许可证
 
