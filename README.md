@@ -73,6 +73,19 @@ Use `dev-write-plan` when the requirement is clear enough to turn into executabl
 
 Use `dev-execute-plan` when an implementation plan already exists under `plans/` and should be applied on the current branch. It checks the working tree, follows the plan, and uses commits plus diffs as review boundaries.
 
+Example prompts:
+
+```text
+Use dev-explore to understand how authentication works in this repo.
+Use dev-explore to inspect the billing flow before we plan changes.
+
+Use dev-write-plan to plan adding password reset support.
+Use dev-write-plan to turn this bug report into an implementation plan.
+
+Use dev-execute-plan to implement plans/001.
+Use dev-execute-plan to execute the next TODO plan.
+```
+
 ## License
 
 MIT

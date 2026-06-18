@@ -73,6 +73,19 @@ npx skills add myWsq/dev-skills --skill dev-explore
 
 当 `plans/` 下已经有实现计划，需要在当前分支落地时，使用 `dev-execute-plan`。它会检查工作区状态，按计划执行，并用提交记录和 diff 作为后续评审边界。
 
+示例：
+
+```text
+用 dev-explore 先帮我理清这个仓库的认证流程。
+用 dev-explore 看一下 billing 这块，先不要改代码。
+
+用 dev-write-plan 规划一下新增密码重置功能。
+用 dev-write-plan 把这个 bug report 写成实现计划。
+
+用 dev-execute-plan 落地 plans/001。
+用 dev-execute-plan 执行下一个 TODO 计划。
+```
+
 ## 许可证
 
 MIT
