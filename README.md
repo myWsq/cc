@@ -4,6 +4,8 @@
 
 `dev-skills` is a small collection of agent skills for plan-driven software development. It separates a development task into three explicit phases: code exploration, implementation planning, and plan execution. The goal is to help an agent build enough context before coding, produce a reviewable plan before implementation, and finish with validation commands plus a git diff review.
 
+It is also designed for cross-agent collaboration: use a more capable agent to explore and write the plan, then use a faster or cheaper agent to implement that plan, with the lead agent reviewing the final diff.
+
 This repository supports three distribution paths:
 
 - install the bundled `dev` plugin from a Codex plugin marketplace;
@@ -73,6 +75,14 @@ Use `dev-write-plan` when the requirement is clear enough to turn into executabl
 
 Use `dev-execute-plan` when an implementation plan already exists under `plans/` and should be applied on the current branch. It checks the working tree, follows the plan, and uses commits plus diffs as review boundaries.
 
+Recommended workflow:
+
+```text
+smart agent: dev-explore -> dev-write-plan
+fast/cheap agent: dev-execute-plan
+lead agent: review the diff and validation results
+```
+
 Example prompts:
 
 ```text
@@ -84,6 +94,7 @@ Use dev-write-plan to turn this bug report into an implementation plan.
 
 Use dev-execute-plan to implement plans/001.
 Use dev-execute-plan to execute the next TODO plan.
+Use dev-execute-plan to delegate plans/002 to a faster local agent and review the result.
 ```
 
 ## License
