@@ -1,25 +1,25 @@
 #!/usr/bin/env python3
-"""dispatch.py — 把一份 prompt 文件派发给指定外部后端,在「当前分支」改代码 + 提交。
+"""dispatch.py — 把一份 prompt 文件派发给指定 agent CLI,在「当前分支」改代码 + 提交。
 
 固定参数(yolo / 跳权限 / 工作目录)都封装在这里;主 agent 只需:
   1) 把拼好的派发 prompt 写进一个文件
-  2) 跑 dispatch.py <后端名> <仓库根> <prompt文件> [模型]
-不用记各后端各自的 flag。
+  2) 跑 dispatch.py <agent名> <仓库根> <prompt文件> [模型]
+不用记各 agent CLI 各自的 flag。
 
-prompt 以 argv 列表传给后端进程(不经过 shell),所以再长、带引号或换行都安全。
+prompt 以 argv 列表传给 agent 进程(不经过 shell),所以再长、带引号或换行都安全。
 
-输出契约(与后端无关):
-  stdout = 后端的普通(人类可读)输出 —— 后台盯盘看这里掌握进度,但只是参考
-  stderr = 后端自身诊断 / 噪音日志(如 token 刷新报错)
-  退出码 = 后端退出码;参数错误 / 后端没装 / 未知后端 → 2 并在 stderr 说明。
+输出契约(与 agent 无关):
+  stdout = agent 的普通(人类可读)输出 —— 后台盯盘看这里掌握进度,但只是参考
+  stderr = agent 自身诊断 / 噪音日志(如 token 刷新报错)
+  退出码 = agent 退出码;参数错误 / agent 没装 / 未知 agent → 2 并在 stderr 说明。
 
 为什么不阻塞死等:配合后台运行盯盘。主 agent 用后台方式启动本脚本(如 Claude Code 的
 run_in_background),周期性读 stdout 掌握进度、方向跑偏/卡死就直接 kill 早停。但要记牢:
-后端的 stdout 只是参考,真相源永远是 `git diff <基线>..HEAD`——评审依据它,不是这段文字。
-脚本只管把后端输出如实透传(继承 stdout/stderr),不阻塞、不解析、不抢 stdout。
+agent 的 stdout 只是参考,真相源永远是 `git diff <基线>..HEAD`——评审依据它,不是这段文字。
+脚本只管把 agent 输出如实透传(继承 stdout/stderr),不阻塞、不解析、不抢 stdout。
 
-要支持一个新后端:在 BACKENDS 里加一个 handler(怎么调用),并在 detect-backends.py 的
-KNOWN_BACKENDS 里加一项(怎么探测)即可。
+要支持一个新的可委派 agent:在 AGENTS 里加一个 handler(怎么调用),并在 detect-agents.py 的
+KNOWN_AGENTS 里加一项(怎么探测)即可。
 """
 
 import shutil
@@ -49,7 +49,7 @@ def run_codex(repo, prompt, model):
 
 def run_cursor(repo, prompt, model):
     """cursor-agent:--yolo(=--force,Run Everything)放开 write/shell 才能改+提交;
-    --output-format text 用默认人类可读输出(stdout 即后端文字,后台盯盘看进度与结果);
+    --output-format text 用默认人类可读输出(stdout 即 agent 文字,后台盯盘看进度与结果);
     不传 -w/--worktree(那会跑到隔离 worktree,我们要当前分支)。"""
     if not shutil.which("cursor-agent"):
         die("cursor-agent 未安装(PATH 上没有 cursor-agent)")
@@ -63,7 +63,7 @@ def run_cursor(repo, prompt, model):
 def run_claude(repo, prompt, model):
     """claude(Claude Code 自身的 headless 模式)委派给另一个 claude 实例:-p/--print 跑
     headless;--dangerously-skip-permissions 放开权限(等价 yolo)才能改+提交,否则会卡在权限
-    询问。用默认人类可读输出(不开 stream-json),后端文字直接到 stdout。claude 没有「设工作
+    询问。用默认人类可读输出(不开 stream-json),agent 文字直接到 stdout。claude 没有「设工作
     目录」flag,直接用 subprocess 的 cwd=仓库根。"""
     if not shutil.which("claude"):
         die("claude 未安装(PATH 上没有 claude)")
@@ -73,8 +73,8 @@ def run_claude(repo, prompt, model):
     return subprocess.run(cmd, cwd=repo).returncode
 
 
-# 后端名 → handler。加新后端在这里加一项(并在 detect-backends.py 加探测)。
-BACKENDS = {
+# agent 名 → handler。加新 agent 在这里加一项(并在 detect-agents.py 加探测)。
+AGENTS = {
     "codex": run_codex,
     "cursor": run_cursor,
     "claude": run_claude,
@@ -83,8 +83,8 @@ BACKENDS = {
 
 def main(argv):
     if len(argv) < 3:
-        die("用法: dispatch.py <后端名> <仓库根> <prompt文件> [模型]")
-    backend, repo, pf = argv[0], argv[1], argv[2]
+        die("用法: dispatch.py <agent名> <仓库根> <prompt文件> [模型]")
+    agent, repo, pf = argv[0], argv[1], argv[2]
     model = argv[3] if len(argv) > 3 else ""
 
     if not Path(repo).is_dir():
@@ -92,9 +92,9 @@ def main(argv):
     if not Path(pf).is_file():
         die(f"prompt 文件不存在: {pf}")
 
-    handler = BACKENDS.get(backend)
+    handler = AGENTS.get(agent)
     if handler is None:
-        die(f"未知后端: {backend}(支持: {', '.join(BACKENDS)})")
+        die(f"未知 agent: {agent}(支持: {', '.join(AGENTS)})")
 
     prompt = Path(pf).read_text(encoding="utf-8")
     sys.exit(handler(repo, prompt, model))

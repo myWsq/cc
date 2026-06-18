@@ -83,6 +83,16 @@ fast/cheap agent: dev-execute-plan
 lead agent: review the diff and validation results
 ```
 
+`dev-execute-plan` can execute the plan directly, or delegate implementation to a detected local agent CLI:
+
+| Agent | How it is used |
+| --- | --- |
+| `codex` | Runs `codex exec` in the current repository. |
+| `cursor` | Runs `cursor-agent` in the current repository. |
+| `claude` | Runs Claude Code in headless mode in the current repository. |
+
+Direct execution by the current agent is always available. Delegation depends on which agent CLIs are installed and authenticated on your machine.
+
 Example prompts:
 
 ```text

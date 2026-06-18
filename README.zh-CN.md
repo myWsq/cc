@@ -83,6 +83,16 @@ npx skills add myWsq/dev-skills --skill dev-explore
 主 agent：评审 diff 和验证结果
 ```
 
+`dev-execute-plan` 可以由当前 agent 直接执行计划，也可以委派给本机探测到的 agent CLI：
+
+| Agent | 用途 |
+| --- | --- |
+| `codex` | 在当前仓库运行 `codex exec`。 |
+| `cursor` | 在当前仓库运行 `cursor-agent`。 |
+| `claude` | 在当前仓库以 headless 模式运行 Claude Code。 |
+
+当前 agent 直接执行始终可用。可委派 agent 取决于本机是否安装并完成认证。
+
 示例：
 
 ```text
