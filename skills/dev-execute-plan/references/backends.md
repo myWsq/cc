@@ -26,10 +26,11 @@ STATUS / STEPS(逐步 done|skipped + 验证结果)/ FILES CHANGED / COMMITS / NO
 
 > 把这几块拼好写进 `$PF`,然后把**文件路径**传给 dispatch.py(下一节)——脚本自己读文件内容、以 argv 列表传给后端进程,不经过 shell,plan 里的引号/换行都不会破坏命令行。
 
-## 二、派发:dispatch.py
+## 二、派发:dispatch.py(后台运行 + 轮询)
 
 ```
-# dispatch.py 在本 skill 目录(含本 SKILL.md 的那个目录)的 scripts/ 下,用其绝对路径跑:
+# dispatch.py 在本 skill 目录(含本 SKILL.md 的那个目录)的 scripts/ 下,用其绝对路径跑。
+# 关键:用 run_in_background 这类后台方式启动,别前台死等。
 python3 "<此 skill 目录的绝对路径>/scripts/dispatch.py" \
   <后端名> <仓库根绝对路径> "$PF" [模型]
 ```
@@ -37,13 +38,18 @@ python3 "<此 skill 目录的绝对路径>/scripts/dispatch.py" \
 - `<后端名>` = 从 `detect-backends.py` 的 `BACKENDS` 或用户点名拿到的那个名字,原样传进去。
 - 第 4 个参数「模型」可省(用后端默认);用户点名某模型就传(如「用 o3」→ 传 `o3`)。
 - `"$PF"` 传的是 **prompt 文件路径**,不是内容;dispatch.py 自己读。
-- 脚本 **stdout = 后端最终消息**(报告,仅供参考);全过程日志在 stderr。
+- 脚本 **stdout = 后端执行事件流(JSONL,实时)**——后台轮询它看进度;后端自身的诊断/噪音(如 token 刷新报错)走 stderr,不混进事件流。
 - 退出码 = 后端退出码;后端没装 / 参数错 / 未知后端 → 非 0 并在 stderr 说明。
-- 跑完回 SKILL.md 第 5 步:`git diff <基线>..HEAD` 评审——这才是依据,不是后端那段文字。
+
+**派发后怎么盯**:后端都是非交互的(yolo / headless,实测在纯管道、无人应答 stdin 下也能跑完不卡),所以不用喂输入,只需**监工**:
+
+1. 用后台任务句柄周期性读 stdout 的事件流——看它在推进(codex 是 `item.completed` 这类事件、cursor / claude 是 stream-json 事件)还是空转。
+2. 方向明显跑偏、卡死、或动了 out-of-scope 文件 → **直接 kill 这个后台任务**早停,别等它烧完一整轮;按 SKILL.md 的 REVISE/BLOCK 处理。
+3. 任务正常结束后,回 SKILL.md 第 5 步:`git diff <基线>..HEAD` 评审——这才是依据,事件流只用来掌握进度与早停,不是后端那段文字。
 
 ### 脚本封装了什么(供了解,正常不用手敲)
 
-每个外部后端的具体命令与固定 flag——为什么必须放开沙箱 / yolo 才能改代码 + 提交、工作目录设哪、最终消息怎么取——都在 `dispatch.py` 对应的 handler 里逐条带注释。**要支持一个新后端**,只在 `detect-backends.py`(加探测)和 `dispatch.py`(加 handler)各加一段即可,本文件和 SKILL.md 都不用动。
+每个外部后端的具体命令与固定 flag——为什么必须放开沙箱 / yolo / 跳权限才能改代码 + 提交、工作目录设哪、怎么开它的实时流式输出——都在 `dispatch.py` 对应的 handler 里逐条带注释。**要支持一个新后端**,只在 `detect-backends.py`(加探测)和 `dispatch.py`(加 handler)各加一段即可,本文件和 SKILL.md 都不用动。
 
 ## 三、REVISE — 把反馈打回
 

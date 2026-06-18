@@ -1,6 +1,6 @@
 ---
 name: dev-execute-plan
-description: 读取 dev-write-plan 写在 plans/ 里的一份实现计划,在当前分支把它落地:默认由主 agent 自己逐步实现并勤提交;也可委派本机检测到的外部 agent(如 codex / cursor)实现,再由主 agent 评审其 diff(重跑完成标准、查范围、读代码),给出 APPROVE/REVISE/BLOCK。当用户要求执行/落地某个计划("实现 plans/001""用 codex 跑 003""委派 cursor 实现那个 plan""execute 002")时使用。
+description: 读取 dev-write-plan 写在 plans/ 里的一份实现计划,在当前分支把它落地:默认由主 agent 自己逐步实现并勤提交;也可委派本机检测到的外部 agent(如 codex / cursor / claude)实现,再由主 agent 评审其 diff(重跑完成标准、查范围、读代码),给出 APPROVE/REVISE/BLOCK。当用户要求执行/落地某个计划("实现 plans/001""用 codex 跑 003""委派 cursor 实现那个 plan""用 claude 跑 002""execute 002")时使用。
 metadata:
   author: Shuaiqi Wang
   version: "0.2.3"
@@ -44,6 +44,8 @@ python3 "<此 skill 目录的绝对路径>/scripts/detect-backends.py"
 
 它输出可用清单 + 机器可读的 `BACKENDS=...`(逗号分隔,`self` 恒在内,其余外部后端视本机安装而定)/ `DEFAULT=self`。**本机有哪些外部后端、各自怎么探测与调用,全封装在脚本里**——你只认 `BACKENDS` 列出的名字,别预设具体是谁、也别自己编名字。
 
+**先认清你自己是谁。** 本 skill 可能跑在不同 agent 里(Claude Code / codex / cursor …)。委派的意义是把活外包给**别的** agent;`BACKENDS` 里若有一个外部后端正是你自己(如你就是 Claude Code、列表里又有 `claude`),委派给它 = 自己委派给自己,和「自己实现」没区别——**把它从可委派候选里剔除**,既不把它列进让用户选的选项,也不在「只说要委派」时挑中它。剔除后若一个外部后端都不剩,委派就无从谈起,直接走「自己实现」。
+
 按优先级定方式:
 
 1. **用户/上游已点名具体方式**(`自己实现`,或点名 `BACKENDS` 里的某个外部后端)→ 直接用;点名的后端不在 `BACKENDS` 里(没装/探测不到)就**停下**,给出 `BACKENDS` 里的实际可选项,让对方改选或先装上——别假装派发了,也别擅自改回自己实现。
@@ -68,11 +70,11 @@ python3 "<此 skill 目录的绝对路径>/scripts/detect-backends.py"
 
   排序上让代码库在步骤间尽量可用(先加新路径、再切调用方、最后删旧路径)。
 
-- **委派** —— 按 [references/backends.md](references/backends.md):把派发 prompt(执行者前导 + **计划全文内联** + 硬规则 3/7 的副本)写进一个临时文件,再调 `scripts/dispatch.py <后端> <仓库根> <prompt文件> [模型]` 派发。**固定参数(yolo / 工作目录 / 输出)都在脚本里,你只管拼 prompt。** 脚本 stdout 是后端的报告——**仅供参考**,真正的评审依据是下一步的 `git diff <基线>..HEAD`。
+- **委派** —— 按 [references/backends.md](references/backends.md):把派发 prompt(执行者前导 + **计划全文内联** + 硬规则 3/7 的副本)写进一个临时文件,然后**后台启动** `scripts/dispatch.py <后端> <仓库根> <prompt文件> [模型]`(用 `run_in_background` 这类后台方式,别前台死等)。**固定参数(yolo / 跳权限 / 工作目录 / 流式输出)都在脚本里,你只管拼 prompt。** 派发后**别干等黑盒**:周期性看它 stdout 的事件流(JSONL)掌握进度——方向明显跑偏、卡死或动了 out-of-scope 文件,就**直接 kill 这个后台任务早停**,按 REVISE/BLOCK 处理,省得烧完一整轮才发现。事件流只供掌握进度与早停,**真正的评审依据是下一步的 `git diff <基线>..HEAD`**。
 
 ### 第 5 步 — 验证
 
-先取改动:`git diff <基线>..HEAD`;再 `git status --porcelain`,应为空(委派模式非空 = 后端漏提交,记下来当要它补的缺口)。
+委派模式先确认那个后台 dispatch 任务已结束(自己实现模式跳过)。然后取改动:`git diff <基线>..HEAD`;再 `git status --porcelain`,应为空(委派模式非空 = 后端漏提交,记下来当要它补的缺口)。
 
 - **自己实现 → 收尾自检**:
   1. 跑计划的全部 **Done criteria**,逐条确认成立(别只信印象,真跑命令)。
