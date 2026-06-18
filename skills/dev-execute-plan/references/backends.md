@@ -2,9 +2,9 @@
 
 给 dev-execute-plan 的**委派**步骤用。默认的「自己实现」由主 agent 直接干,不走这里。
 
-委派时主 agent 只做两件事:**拼 prompt → 调 dispatch.sh**。所有固定参数(yolo、工作目录、输出)都封装在 `scripts/dispatch.sh` 里,你不用记 codex/cursor 各自的 flag。
+委派时主 agent 只做两件事:**拼 prompt → 调 dispatch.py**。所有固定参数(yolo、工作目录、输出)都封装在 `scripts/dispatch.py` 里,你不用记各外部后端各自的 flag。
 
-两个后端都在**当前仓库目录、当前分支**改代码并提交;评审统一用 `git diff <基线>..HEAD`(基线 = 派发前 `git rev-parse HEAD`)。后端是否可用,跑 `scripts/detect-backends.sh` 探测。
+外部后端都在**当前仓库目录、当前分支**改代码并提交;评审统一用 `git diff <基线>..HEAD`(基线 = 派发前 `git rev-parse HEAD`)。本机有哪些后端可用,跑 `scripts/detect-backends.py` 探测——**它输出的 `BACKENDS` 就是全部可选项,别预设具体是谁**。
 
 ## 一、拼派发 prompt
 
@@ -24,26 +24,27 @@
 STATUS / STEPS(逐步 done|skipped + 验证结果)/ FILES CHANGED / COMMITS / NOTES
 ```
 
-> 把这几块拼好写进 `$PF`,dispatch.sh 会用 `"$(cat "$PF")"` 安全传进去——双引号命令替换把整份内容当**单个**参数,plan 里的引号/换行不会破坏命令行。
+> 把这几块拼好写进 `$PF`,然后把**文件路径**传给 dispatch.py(下一节)——脚本自己读文件内容、以 argv 列表传给后端进程,不经过 shell,plan 里的引号/换行都不会破坏命令行。
 
-## 二、派发:dispatch.sh
+## 二、派发:dispatch.py
 
 ```
-# dispatch.sh 在本 skill 目录(含本 SKILL.md 的那个目录)的 scripts/ 下,用其绝对路径跑:
-bash "<此 skill 目录的绝对路径>/scripts/dispatch.sh" \
-  <codex|cursor> <仓库根绝对路径> "$PF" [模型]
+# dispatch.py 在本 skill 目录(含本 SKILL.md 的那个目录)的 scripts/ 下,用其绝对路径跑:
+python3 "<此 skill 目录的绝对路径>/scripts/dispatch.py" \
+  <后端名> <仓库根绝对路径> "$PF" [模型]
 ```
 
-- 第 4 个参数「模型」可省(用后端默认);用户点名就传(`codex 用 o3` → 传 `o3`)。
+- `<后端名>` = 从 `detect-backends.py` 的 `BACKENDS` 或用户点名拿到的那个名字,原样传进去。
+- 第 4 个参数「模型」可省(用后端默认);用户点名某模型就传(如「用 o3」→ 传 `o3`)。
+- `"$PF"` 传的是 **prompt 文件路径**,不是内容;dispatch.py 自己读。
 - 脚本 **stdout = 后端最终消息**(报告,仅供参考);全过程日志在 stderr。
-- 退出码 = 后端退出码;后端没装/参数错 → 非 0 并在 stderr 说明。
+- 退出码 = 后端退出码;后端没装 / 参数错 / 未知后端 → 非 0 并在 stderr 说明。
 - 跑完回 SKILL.md 第 5 步:`git diff <基线>..HEAD` 评审——这才是依据,不是后端那段文字。
 
 ### 脚本封装了什么(供了解,正常不用手敲)
 
-- **codex**:`codex exec "<prompt>" -C <repo> --dangerously-bypass-approvals-and-sandbox [-m <model>] --output-last-message <tmp>`。**必须无沙箱(yolo)**——`-s workspace-write` 会禁止写 `.git/`,执行者能改代码但 `git add` 报 `Operation not permitted`、拿不到提交。
-- **cursor**:`cursor-agent -p "<prompt>" --workspace <repo> [-m <model>] --output-format text --yolo`。`--yolo`(= `--force`,Run Everything)放开 write/shell 才能改+提交;不传 `-w/--worktree`(那会跑到隔离 worktree)。
+每个外部后端的具体命令与固定 flag——为什么必须放开沙箱 / yolo 才能改代码 + 提交、工作目录设哪、最终消息怎么取——都在 `dispatch.py` 对应的 handler 里逐条带注释。**要支持一个新后端**,只在 `detect-backends.py`(加探测)和 `dispatch.py`(加 handler)各加一段即可,本文件和 SKILL.md 都不用动。
 
 ## 三、REVISE — 把反馈打回
 
-评审给 REVISE 时,反馈要**具体、可操作**("criterion 3 不过:X;`api.ts:90` 吞了异常——按计划用 Result 模式")。最多 **2 轮**,再不行 BLOCK。两个后端都无状态:把「具体反馈 + 当前 `git diff <基线>..HEAD`(让它看到现状)+ 在当前分支就地修正并提交」写进**新的** prompt 文件,再调一次 dispatch.sh(同样的后端)。每轮修订后回 SKILL.md 第 5 步重审——`git diff <基线>..HEAD` 已含新提交。
+评审给 REVISE 时,反馈要**具体、可操作**("criterion 3 不过:X;`api.ts:90` 吞了异常——按计划用 Result 模式")。最多 **2 轮**,再不行 BLOCK。外部后端都无状态:把「具体反馈 + 当前 `git diff <基线>..HEAD`(让它看到现状)+ 在当前分支就地修正并提交」写进**新的** prompt 文件,再调一次 dispatch.py(同样的后端)。每轮修订后回 SKILL.md 第 5 步重审——`git diff <基线>..HEAD` 已含新提交。
