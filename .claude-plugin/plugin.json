@@ -1,6 +1,6 @@
 {
   "name": "dev",
-  "description": "计划驱动开发三件套:dev-explore 摸清代码地形并澄清需求,dev-write-plan 写成自包含实现计划,dev-execute-plan 在当前分支落地——默认主 agent 自己实现,也可委派 codex / cursor 实现再由主 agent 评审。三者可单独使用,顺跑时链式交接。",
+  "description": "计划驱动开发三件套:dev-explore 摸清代码地形、澄清需求并收敛方案,dev-write-plan 写成自包含实现计划,dev-execute-plan 在当前分支落地——默认主 agent 自己实现,也可委派 codex / cursor 实现再由主 agent 评审。三者可单独使用,顺跑时链式交接。",
   "author": {
     "name": "Shuaiqi Wang",
     "email": "wsq961@outlook.com"
