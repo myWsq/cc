@@ -16,7 +16,7 @@ This repository supports three distribution paths:
 
 | Skill | Purpose | Output |
 | --- | --- | --- |
-| `dev-explore` | Read the relevant code, identify current behavior, validation commands, conventions, and ambiguous requirements without modifying files. | A codebase map and requirement clarification in the conversation. |
+| `dev-explore` | Read the relevant code, identify current behavior, validation commands, conventions, ambiguous requirements, and viable approaches without modifying files. | A codebase map, requirement clarification, and approved direction in the conversation. |
 | `dev-write-plan` | Convert a clear requirement into a self-contained, executable, and verifiable implementation plan. | `plans/NNN-*.md` plus the `plans/README.md` index. |
 | `dev-execute-plan` | Execute a plan on the current branch, validate it, and commit the work; it can also delegate implementation to a supported local agent and review the resulting diff. | Implementation commits and plan status updates on the current branch. |
 
@@ -69,7 +69,7 @@ Useful options:
 
 ## Usage
 
-Use `dev-explore` when the requirement is still unclear, the relevant code path is uncertain, or you need to understand the existing architecture and validation workflow first. This skill is read-only: it does not create plan files or modify source code.
+Use `dev-explore` when the requirement is still unclear, the relevant code path is uncertain, or you need to understand the existing architecture and validation workflow first. For open-ended or behavior-changing requests, it also compares approaches and converges on a direction before planning, preferably using structured question tools when the environment provides them. This skill is read-only: it does not create plan files or modify source code.
 
 Use `dev-write-plan` when the requirement is clear enough to turn into executable steps for an agent. The generated plan includes scope, steps, validation commands, completion criteria, and stop conditions.
 

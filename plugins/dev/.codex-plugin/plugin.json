@@ -1,7 +1,7 @@
 {
   "name": "dev",
-  "version": "0.1.0",
-  "description": "计划驱动开发三件套: dev-explore 摸清代码地形并澄清需求, dev-write-plan 写成自包含实现计划, dev-execute-plan 在当前分支落地。",
+  "version": "0.1.1",
+  "description": "计划驱动开发三件套: dev-explore 摸清代码地形、澄清需求并收敛方案, dev-write-plan 写成自包含实现计划, dev-execute-plan 在当前分支落地。",
   "author": {
     "name": "Shuaiqi Wang",
     "email": "wsq961@outlook.com",
@@ -19,8 +19,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Dev Skills",
-    "shortDescription": "计划驱动开发: 探路、写计划、执行计划。",
-    "longDescription": "Dev Skills packages three planning-driven development skills for Codex: dev-explore to understand code and clarify requirements, dev-write-plan to produce self-contained implementation plans, and dev-execute-plan to execute or delegate those plans with review.",
+    "shortDescription": "计划驱动开发: 探路收敛、写计划、执行计划。",
+    "longDescription": "Dev Skills packages three planning-driven development skills for Codex: dev-explore to understand code, clarify requirements, compare approaches, and converge on a direction; dev-write-plan to produce self-contained implementation plans; and dev-execute-plan to execute or delegate those plans with review.",
     "developerName": "Shuaiqi Wang",
     "category": "Developer Tools",
     "capabilities": [
