@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""Detect agent CLIs that dev-execute-plan can delegate to.
+"""Detect external agent CLIs that dev-execute-plan can delegate to.
 
-Self-execution is the default dev-execute-plan behavior and is not reported here.
+Subagent delegation (the preferred mode) and self-execution are host
+capabilities and are not reported here; this script only covers external CLIs.
 The machine-readable output is:
 
-    AGENTS=codex,cursor,claude
+    AGENTS=codex,claude
+    AGENTS_UNAUTH=cursor
 
-Only detected agent CLIs are included.
+AGENTS lists CLIs that are installed and have credentials detected;
+AGENTS_UNAUTH lists CLIs that are installed but whose credentials were not found.
 """
 
 from __future__ import annotations
@@ -47,13 +50,14 @@ OK, NO, WARN = "[ok]", "[no]", "[!]"
 
 def version_line(binary: str) -> str:
     try:
-        out = subprocess.run(
+        result = subprocess.run(
             [binary, "--version"],
             capture_output=True,
             text=True,
             timeout=10,
-        ).stdout
-        return out.splitlines()[0].strip() if out and out.strip() else ""
+        )
+        out = result.stdout.strip() or result.stderr.strip()
+        return out.splitlines()[0].strip() if out else ""
     except Exception:
         return ""
 
@@ -69,7 +73,8 @@ def main() -> None:
     print("==========================================")
     print()
 
-    available: list[str] = []
+    authenticated: list[str] = []
+    unauthenticated: list[str] = []
 
     for agent in KNOWN_AGENTS:
         path = shutil.which(agent["bin"])
@@ -79,13 +84,16 @@ def main() -> None:
 
         version = version_line(agent["bin"])
         version_suffix = f" ({version})" if version else ""
-        auth = "authenticated" if has_auth(agent) else "auth not detected"
-        marker = OK if has_auth(agent) else WARN
-        print(f"{marker} {agent['key']:<8} {agent['label']:<15} {path}{version_suffix} {auth}")
-        available.append(agent["key"])
+        if has_auth(agent):
+            print(f"{OK} {agent['key']:<8} {agent['label']:<15} {path}{version_suffix} authenticated")
+            authenticated.append(agent["key"])
+        else:
+            print(f"{WARN} {agent['key']:<8} {agent['label']:<15} {path}{version_suffix} auth not detected")
+            unauthenticated.append(agent["key"])
 
     print()
-    print("AGENTS=" + ",".join(available))
+    print("AGENTS=" + ",".join(authenticated))
+    print("AGENTS_UNAUTH=" + ",".join(unauthenticated))
 
 
 if __name__ == "__main__":

@@ -35,7 +35,7 @@ Codex 插件侧:`.agents/plugins/marketplace.json` 里 `dev` 插件 `source.path
 3. 辅助脚本/文档放进同目录的 `scripts/` / `references/`
 4. 同步到 Codex wrapper:`rm -rf plugins/dev/skills && cp -R skills plugins/dev/skills`
 5. 本地验证 CLI 能识别:`npx skills add . --list` 应列出新 skill
-6. 提交推送 —— **npx skills / Claude Code 会读顶层 `skills/`,Codex 会读 `plugins/dev/skills/`;新增或修改 skill 时必须同步这两处**
+6. 提交推送 —— **npx skills / Claude Code 会读顶层 `skills/`,Codex 会读 `plugins/dev/skills/`;新增或修改 skill 时必须同步这两处**(CI `.github/workflows/check-skill-sync.yml` 会在 push/PR 时 `diff -r` 校验,漏同步会挂检查)
 
 ## 注意
 
@@ -44,4 +44,4 @@ Codex 插件侧:`.agents/plugins/marketplace.json` 里 `dev` 插件 `source.path
 - Codex plugin 打包当前不会跟随指向仓库顶层的 `skills` 符号链接,所以 `plugins/dev/skills/` 必须是真实文件副本。
 - Claude 的 `plugin.json` / `marketplace.json` 都**省略 `version`**,用 git commit SHA 当版本——推一次 commit 即一个新版本,无 version-bump 流程。Codex 的 `plugins/dev/.codex-plugin/plugin.json` 必须写 semver;需要强制刷新本地安装时,用 Codex cachebuster 后缀而不是随手改数字版本。
 - 改 plugin 元数据后可跑 `claude plugin validate .` 校验清单合法性。
-- 改 Codex plugin 元数据后可跑 `python3 /Users/wsq/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py plugins/dev` 校验 manifest 合法性。
+- 改 Codex plugin 元数据后可跑 `python3 ~/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py plugins/dev` 校验 manifest 合法性(需要 `pyyaml`)。

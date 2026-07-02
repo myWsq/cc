@@ -11,7 +11,9 @@ The delegated agent works in the current repository and is expected to modify co
 
 from __future__ import annotations
 
+import os
 import shutil
+import signal
 import subprocess
 import sys
 from pathlib import Path
@@ -20,6 +22,26 @@ from pathlib import Path
 def die(message: str) -> None:
     print(f"dispatch.py: {message}", file=sys.stderr)
     raise SystemExit(2)
+
+
+def run_agent(cmd: list[str], cwd: str | None = None) -> int:
+    """Run the agent in its own process group and forward termination signals,
+    so killing dispatch.py also stops the delegated agent instead of orphaning it."""
+    proc = subprocess.Popen(cmd, cwd=cwd, start_new_session=True)
+
+    def forward(signum: int, _frame: object) -> None:
+        try:
+            os.killpg(proc.pid, signum)
+        except (ProcessLookupError, PermissionError):
+            pass
+
+    signals = [signal.SIGINT, signal.SIGTERM]
+    if hasattr(signal, "SIGHUP"):
+        signals.append(signal.SIGHUP)
+    for sig in signals:
+        signal.signal(sig, forward)
+
+    return proc.wait()
 
 
 def run_codex(repo: str, prompt: str, model: str) -> int:
@@ -35,7 +57,7 @@ def run_codex(repo: str, prompt: str, model: str) -> int:
     ]
     if model:
         cmd += ["-m", model]
-    return subprocess.run(cmd).returncode
+    return run_agent(cmd)
 
 
 def run_cursor(repo: str, prompt: str, model: str) -> int:
@@ -45,7 +67,7 @@ def run_cursor(repo: str, prompt: str, model: str) -> int:
     if model:
         cmd += ["-m", model]
     cmd += ["--output-format", "text", "--yolo"]
-    return subprocess.run(cmd).returncode
+    return run_agent(cmd)
 
 
 def run_claude(repo: str, prompt: str, model: str) -> int:
@@ -54,7 +76,7 @@ def run_claude(repo: str, prompt: str, model: str) -> int:
     cmd = ["claude", "-p", prompt, "--dangerously-skip-permissions"]
     if model:
         cmd += ["--model", model]
-    return subprocess.run(cmd, cwd=repo).returncode
+    return run_agent(cmd, cwd=repo)
 
 
 AGENTS = {

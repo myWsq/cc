@@ -20,9 +20,11 @@ Write one executable plan for one requirement. The plan must be complete enough 
 
 ### 1. Establish context
 
-- If continuing from `dev-explore`, reuse the explored terrain and clarified requirement.
+- If continuing from `dev-explore`, reuse the explored terrain, clarified requirement, and departure-check answers. The grilling and all confirmations already happened there: do not re-interrogate settled decisions and do not re-confirm anything.
 - If starting from a direct request, do lightweight recon: docs, root config, CI, relevant files, exact validation commands, and local conventions.
-- Clarify only unresolved decisions that cannot be inferred from code. Ask one question at a time with a recommended answer.
+- For direct requests, clarify remaining open decisions following the same grill-by-default convention as `dev-explore` (code-answerable questions answered from code, the rest one at a time with a recommended answer; honor "don't grill me"), then finish with `dev-explore`'s departure check — direction, execution mode, delegation consent, autopilot or review pause — so nothing needs confirmation later.
+- If clarification uncovers a genuinely open-ended design space, switch to `dev-explore` to converge on a direction before writing the plan.
+- If planning itself surfaces a new decision: when minor, decide it yourself following the approved direction and local conventions, and record it in the plan under a "Decisions made while planning" note; when it contradicts the approved direction or the code's current state, stop and report instead of guessing or re-asking piecemeal.
 
 ### 2. Write the plan
 
@@ -40,7 +42,7 @@ Use this structure:
 > Execute step by step. Run each validation command before continuing.
 > Stop on any STOP condition. When complete, update this plan in `plans/README.md`.
 >
-> Drift check: `git diff --stat <planned-sha>..HEAD -- <in-scope paths>`
+> Drift check: `git diff --stat <planned-sha>..HEAD -- <in-scope paths> <files cited in Current state>`
 
 ## Status
 
@@ -49,6 +51,7 @@ Use this structure:
 - Risk: LOW | MED | HIGH
 - Depends on: none | plans/NNN-*.md
 - Category: bug | feature | tests | refactor | docs | dx | migration
+- Execution: subagent[ <model>] | <agent CLI>[ <model>] | self — from the departure check; subagent is the default
 - Planned at: `<short-sha>`, <YYYY-MM-DD>
 
 ## Why
@@ -109,9 +112,9 @@ What future maintainers or reviewers should watch.
 
 ### 3. Handoff
 
-- If this plan follows an explicit `dev-explore` handoff, summarize the plan, commit only `plans/`, then start `dev-execute-plan` with the known execution preference.
-- If the request came directly to this skill, ask whether to execute now and whether to self-execute or delegate. If confirmed, commit only `plans/` and start `dev-execute-plan`.
-- If the user wants to review first, stop after writing the plan.
+- After a completed departure check — whether it happened in `dev-explore` or here — do not ask anything: summarize the plan for the record, commit only `plans/`, and start `dev-execute-plan` with the recorded execution mode.
+- If the user opted into a review pause at the departure check, stop after writing the plan. Leaving `plans/` uncommitted is fine: `dev-execute-plan` commits pending `plans/` files itself during preflight. When the user comes back, resume directly with the recorded execution mode; do not re-run the departure check unless the review changed the plan's direction.
+- Only if no departure check ever happened (unusual entry path): ask once — execute now (self-execution or a named agent) or review first — then proceed accordingly.
 
 ## Quality bar
 
