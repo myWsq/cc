@@ -6,9 +6,8 @@
 
 分工方式:主 agent 负责探索代码、把需求"拷问"到方案收敛、写计划、评审结果;实现本身默认委派给低一级模型的子 agent 完成,也可以选外部 agent CLI 或主 agent 自己实现。
 
-本仓库支持三种分发方式:
+本仓库支持两种分发方式:
 
-- 作为 Codex 插件市场中的 `dev` 插件安装;
 - 作为 Claude Code 插件市场中的 `dev` 插件安装;
 - 只需要部分流程时,通过 [`npx skills`](https://github.com/vercel-labs/skills) 按 skill 安装。
 
@@ -57,15 +56,6 @@ dev-explore ──(发车确认:最后一次确认)──> dev-write-plan ──
 无论哪种方式,主 agent 都亲自核验结果:逐条重跑完成标准,对照记录的基线读完整 diff,确认只有范围内文件被改动、没有未提交的残留,并检查测试断言是否有实际意义。委派产出需要返工时,以具体修订意见发回执行方(最多两轮),仍不行则将计划标记为 BLOCKED。
 
 ## 安装
-
-### 作为 Codex 插件安装
-
-```bash
-codex plugin marketplace add myWsq/dev-skills
-codex plugin add dev@dev-skills
-```
-
-安装后会得到名为 `dev` 的插件,包含本仓库的三个 skills。
 
 ### 作为 Claude Code 插件安装
 

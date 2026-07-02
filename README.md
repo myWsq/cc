@@ -6,9 +6,8 @@
 
 The division of labor: the orchestrating agent explores the code, grills the requirement into a converged direction, writes the plan, and reviews the result. The implementation itself is delegated by default to a subagent running on a lower model tier; external agent CLIs and self-execution are alternatives.
 
-This repository supports three distribution paths:
+This repository supports two distribution paths:
 
-- install the bundled `dev` plugin from a Codex plugin marketplace;
 - install the bundled `dev` plugin from a Claude Code plugin marketplace;
 - install individual skills with [`npx skills`](https://github.com/vercel-labs/skills) when you only need part of the workflow.
 
@@ -57,15 +56,6 @@ Three execution modes, in default preference order:
 Regardless of mode, the orchestrator verifies the result itself: it re-runs every done criterion, reads the full diff against the recorded baseline, checks that only in-scope files changed and that nothing is left uncommitted, and reviews tests for meaningful assertions. Delegated work that needs fixes goes back to the executor as concrete revision feedback (at most two rounds) before the plan is marked BLOCKED.
 
 ## Installation
-
-### Install as a Codex plugin
-
-```bash
-codex plugin marketplace add myWsq/dev-skills
-codex plugin add dev@dev-skills
-```
-
-This installs a plugin named `dev` that includes all three skills in this repository.
 
 ### Install as a Claude Code plugin
 
