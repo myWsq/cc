@@ -5,13 +5,13 @@
     "email": "wsq961@outlook.com"
   },
   "metadata": {
-    "description": "计划驱动开发的 agent skills:探路收敛 → 写计划 → 执行计划。"
+    "description": "Agent skills for plan-driven development: explore and converge → write the plan → execute the plan."
   },
   "plugins": [
     {
       "name": "dev",
       "source": "./",
-      "description": "计划驱动开发三件套:dev-explore 摸清代码地形、澄清需求并收敛方案,dev-write-plan 写成自包含实现计划,dev-execute-plan 在当前分支落地。三者可单独使用,顺跑时链式交接。"
+      "description": "Plan-driven development trio: dev-explore maps the code terrain, clarifies the requirement, and converges on a direction; dev-write-plan turns it into a self-contained implementation plan; dev-execute-plan lands it on the current branch. Each skill works standalone; run in sequence they chain hand-offs."
     }
   ]
 }

@@ -2,29 +2,59 @@
 
 简体中文 | [English](README.md)
 
-`dev-skills` 是一组面向 agent 的计划驱动开发 skills。它把一次开发任务拆成三个清晰阶段：代码探索、实现规划、计划执行。目标是让 agent 在动手前先建立足够上下文，在实现前形成可复核的计划，并在落地后用验证命令和 git diff 完成收尾检查。
+`dev-skills` 是一组面向 agent 的计划驱动开发 skills。它把一次开发任务拆成三个清晰阶段——代码探索、实现规划、计划执行——并把所有需要人拍板的决策前置到第一阶段。一旦确认,后续链路自动跑完,不再打断你。
 
-它也用于跨 agent 协同：用更“聪明”的 agent 做探索和计划，用更便宜、更快速的 agent 按计划实现，最后再由主 agent 评审 diff 和验证结果。
+分工方式:主 agent 负责探索代码、把需求"拷问"到方案收敛、写计划、评审结果;实现本身默认委派给低一级模型的子 agent 完成,也可以选外部 agent CLI 或主 agent 自己实现。
 
-本仓库支持三种分发方式：
+本仓库支持三种分发方式:
 
-- 作为 Codex 插件市场中的 `dev` 插件安装；
-- 作为 Claude Code 插件市场中的 `dev` 插件安装；
-- 只需要部分流程时，通过 [`npx skills`](https://github.com/vercel-labs/skills) 按 skill 安装。
+- 作为 Codex 插件市场中的 `dev` 插件安装;
+- 作为 Claude Code 插件市场中的 `dev` 插件安装;
+- 只需要部分流程时,通过 [`npx skills`](https://github.com/vercel-labs/skills) 按 skill 安装。
 
 ## Skills
 
 | Skill | 作用 | 产物 |
 | --- | --- | --- |
-| `dev-explore` | 只读分析相关代码，梳理现有实现、验证命令、约定、需求歧义和可行方案。 | 对话中的代码地形、需求澄清结果和已确认方向。 |
-| `dev-write-plan` | 将明确需求写成自包含、可执行、可验证的实现计划。 | `plans/NNN-*.md` 以及 `plans/README.md` 索引。 |
-| `dev-execute-plan` | 按计划在当前分支实现、验证并提交；也支持委派本机可用的外部 agent 实现后再评审 diff。 | 当前分支上的实现提交和计划状态更新。 |
+| `dev-explore` | 只读探索:摸清相关代码,逐个问题拷问需求直到设计站得住,比较可行方案,最后以「发车确认」收口——全流程唯一的确认点。也可用于拷问一份已有的计划或设计。 | 代码地形、已敲定的决策、已批准的方向和选定的执行方式。 |
+| `dev-write-plan` | 把收敛后的需求写成自包含、可执行、可验证的实现计划。 | `plans/NNN-*.md` 以及 `plans/README.md` 索引。 |
+| `dev-execute-plan` | 在当前分支执行计划——默认把实现派发给低一级模型的子 agent——然后逐条核验完成标准并评审 diff。 | 当前分支上的实现提交和计划状态更新。 |
 
-三个 skill 可以单独使用，也可以按以下流程串联：
+三个 skill 可以单独使用,但设计上是串成一条链:
 
 ```text
-dev-explore -> dev-write-plan -> dev-execute-plan
+dev-explore ──(发车确认:最后一次确认)──> dev-write-plan ──> dev-execute-plan
 ```
+
+发车确认之后,链路进入自动驾驶:计划自动提交、自动执行,不再询问。STOP 和 BLOCK 条件仍会刹车——那是安全机制,不是确认;push、开 PR、merge 永远需要你另行明确要求。
+
+## 流程详解
+
+### 1. 探索与拷问(`dev-explore`)
+
+`dev-explore` 只读地梳理相关代码、验证命令和项目约定,不做任何修改。对提出的变更,它默认以**拷问模式**澄清:沿设计决策树逐支走到底,一次只问一个问题、附带推荐答案,凡是代码能回答的问题都先查代码而不是问你。说一句 "don't grill me" 即可切换为最小化提问。它也能拷问一份已有的计划或设计文档,产出修订意见而不是新方向。
+
+探索以**发车确认**收口——一个结构化问题,一次性敲定所有事:
+
+1. **方向**——对收敛方案的最终批准。
+2. **执行方式**——子 agent(推荐默认)、指定的外部 agent CLI、或主 agent 自己实现。若外部 CLI 在选项中,"它以跳过审批、无沙箱模式运行"这一事实会写在同一个问题里,选择即知情同意。
+3. **自动驾驶**——确认此后链路无人值守跑到底。想先读一遍计划的人可以在这里显式选择"写完计划暂停"。
+
+### 2. 规划(`dev-write-plan`)
+
+`dev-write-plan` 在 `plans/` 下为每个需求写一份计划,完整到没有对话上下文的 agent 也能照着实现:范围、带验证命令的分步改动、完成标准、停止条件,以及记录发车确认所选执行方式的 `Execution:` 字段。它不改源码,也不重问已敲定的决策;规划中冒出的小决策按已批方向自行定夺并记录在计划里。
+
+### 3. 执行与评审(`dev-execute-plan`)
+
+三种执行方式,按默认优先级排列:
+
+| 方式 | 何时使用 | 说明 |
+| --- | --- | --- |
+| 子 agent(默认) | 宿主环境有子 agent/任务工具(如 Claude Code 的 `Agent`)。 | 通常用比主 agent 低一级的模型;运行在宿主现有权限体系内,无需额外同意。 |
+| 外部 agent CLI | 在发车确认或由用户显式选择。 | 在当前仓库运行 `codex` / `cursor-agent` / `claude` headless,跳过审批、无沙箱——因此永远不会被自动选中。 |
+| 自己实现 | 无子 agent 工具时的兜底,或显式选择。 | 主 agent 直接实现,每个验证通过的步骤提交一次。 |
+
+无论哪种方式,主 agent 都亲自核验结果:逐条重跑完成标准,对照记录的基线读完整 diff,确认只有范围内文件被改动、没有未提交的残留,并检查测试断言是否有实际意义。委派产出需要返工时,以具体修订意见发回执行方(最多两轮),仍不行则将计划标记为 BLOCKED。
 
 ## 安装
 
@@ -35,7 +65,7 @@ codex plugin marketplace add myWsq/dev-skills
 codex plugin add dev@dev-skills
 ```
 
-安装后会得到名为 `dev` 的插件，包含本仓库的三个 skills。
+安装后会得到名为 `dev` 的插件,包含本仓库的三个 skills。
 
 ### 作为 Claude Code 插件安装
 
@@ -44,67 +74,42 @@ codex plugin add dev@dev-skills
 /plugin install dev@dev-skills
 ```
 
-安装后会得到名为 `dev` 的插件，包含本仓库的三个 skills。
+安装后会得到名为 `dev` 的插件,包含本仓库的三个 skills。
 
 ### 通过 `npx skills` 安装单个 skill
 
-当你只需要某一个 skill，或目标 agent 直接消费普通 `SKILL.md` 目录时，使用这种方式。
+当你只需要某一个 skill,或目标 agent 直接消费普通 `SKILL.md` 目录时,使用这种方式。
 
-安装全部 skills：
+安装全部 skills:
 
 ```bash
 npx skills add myWsq/dev-skills
 ```
 
-只安装某一个 skill：
+只安装某一个 skill:
 
 ```bash
 npx skills add myWsq/dev-skills --skill dev-explore
 ```
 
-常用选项：
+常用选项:
 
-- `--list`：查看仓库内可安装的 skills；
-- `-g`：安装到用户级目录，跨项目复用。
+- `--list`:查看仓库内可安装的 skills;
+- `-g`:安装到用户级目录,跨项目复用。
 
-## 使用建议
-
-当需求还不清晰、涉及的代码路径不明确，或者需要先确认现有架构和验证方式时，使用 `dev-explore`。对开放式或会改变行为的请求，它也会先比较方案并收敛方向，再进入计划；如果运行环境提供结构化提问工具，会优先用这类工具提升交互体验。该 skill 只读代码，不创建计划文件，也不修改源码。
-
-当需求已经清楚，需要把它转换成可交给 agent 执行的步骤时，使用 `dev-write-plan`。生成的计划会包含范围、步骤、验证命令、完成标准和停止条件。
-
-当 `plans/` 下已经有实现计划，需要在当前分支落地时，使用 `dev-execute-plan`。它会检查工作区状态，按计划执行，并用提交记录和 diff 作为后续评审边界。
-
-推荐工作流：
-
-```text
-聪明 agent：dev-explore -> dev-write-plan
-便宜快速 agent：dev-execute-plan
-主 agent：评审 diff 和验证结果
-```
-
-`dev-execute-plan` 可以由当前 agent 直接执行计划，也可以委派给本机探测到的 agent CLI：
-
-| Agent | 用途 |
-| --- | --- |
-| `codex` | 在当前仓库运行 `codex exec`。 |
-| `cursor` | 在当前仓库运行 `cursor-agent`。 |
-| `claude` | 在当前仓库以 headless 模式运行 Claude Code。 |
-
-当前 agent 直接执行始终可用。可委派 agent 取决于本机是否安装并完成认证。
-
-示例：
+## 示例
 
 ```text
 用 dev-explore 先帮我理清这个仓库的认证流程。
-用 dev-explore 看一下 billing 这块，先不要改代码。
+用 dev-explore 拷问一下我这个重构想法,再进入规划。
+用 dev-explore 把 plans/003 拷问一遍再执行。
 
 用 dev-write-plan 规划一下新增密码重置功能。
 用 dev-write-plan 把这个 bug report 写成实现计划。
 
 用 dev-execute-plan 落地 plans/001。
 用 dev-execute-plan 执行下一个 TODO 计划。
-用 dev-execute-plan 把 plans/002 委派给更快的本地 agent 实现，并评审结果。
+用 dev-execute-plan 把 plans/002 委派给 codex 实现,并评审结果。
 ```
 
 ## 许可证

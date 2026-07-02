@@ -2,9 +2,9 @@
 
 [简体中文](README.zh-CN.md) | English
 
-`dev-skills` is a small collection of agent skills for plan-driven software development. It separates a development task into three explicit phases: code exploration, implementation planning, and plan execution. The goal is to help an agent build enough context before coding, produce a reviewable plan before implementation, and finish with validation commands plus a git diff review.
+`dev-skills` is a small collection of agent skills for plan-driven software development. It splits a development task into three explicit phases — code exploration, implementation planning, and plan execution — and front-loads every decision that needs a human into the first phase. Once you confirm, the rest of the chain runs to completion without asking again.
 
-It is also designed for cross-agent collaboration: use a more capable agent to explore and write the plan, then use a faster or cheaper agent to implement that plan, with the lead agent reviewing the final diff.
+The division of labor: the orchestrating agent explores the code, grills the requirement into a converged direction, writes the plan, and reviews the result. The implementation itself is delegated by default to a subagent running on a lower model tier; external agent CLIs and self-execution are alternatives.
 
 This repository supports three distribution paths:
 
@@ -16,15 +16,45 @@ This repository supports three distribution paths:
 
 | Skill | Purpose | Output |
 | --- | --- | --- |
-| `dev-explore` | Read the relevant code, identify current behavior, validation commands, conventions, ambiguous requirements, and viable approaches without modifying files. | A codebase map, requirement clarification, and approved direction in the conversation. |
-| `dev-write-plan` | Convert a clear requirement into a self-contained, executable, and verifiable implementation plan. | `plans/NNN-*.md` plus the `plans/README.md` index. |
-| `dev-execute-plan` | Execute a plan on the current branch, validate it, and commit the work; it can also delegate implementation to a supported local agent and review the resulting diff. | Implementation commits and plan status updates on the current branch. |
+| `dev-explore` | Read-only exploration: map the relevant code, grill the requirement question by question until the design holds up, compare approaches, and finish with the departure check — the workflow's single confirmation gate. Can also stress-test an existing plan or design. | A codebase map, resolved decisions, an approved direction, and the chosen execution mode. |
+| `dev-write-plan` | Turn the converged requirement into a self-contained, executable, verifiable implementation plan. | `plans/NNN-*.md` plus the `plans/README.md` index. |
+| `dev-execute-plan` | Execute a plan on the current branch — by default dispatching implementation to a lower-tier subagent — then verify every done criterion and review the diff. | Implementation commits and plan status updates on the current branch. |
 
-The skills can be used independently, but they are designed to work well as a sequence:
+The skills can be used independently, but they are designed to run as a chain:
 
 ```text
-dev-explore -> dev-write-plan -> dev-execute-plan
+dev-explore ──(departure check: the last confirmation)──> dev-write-plan ──> dev-execute-plan
 ```
+
+After the departure check, the chain is on autopilot: the plan is committed and executed without further confirmation. STOP and BLOCK conditions still halt the chain — those are safety stops, not confirmations — and pushing, opening PRs, or merging always require an explicit user request.
+
+## How the flow works
+
+### 1. Explore and grill (`dev-explore`)
+
+`dev-explore` reads the relevant code, validation commands, and conventions without modifying anything. For a proposed change, it clarifies by **grilling by default**: it walks down each branch of the design decision tree, asking one question at a time with a recommended answer, and answering from the codebase instead of asking whenever it can. Say "don't grill me" to switch to minimal questioning. It can also stress-test an existing plan or design document, producing revision notes instead of a new direction.
+
+Exploration ends with the **departure check**, a single structured question that settles everything at once:
+
+1. **Direction** — final approval of the converged approach.
+2. **Execution mode** — subagent (recommended default), a named external agent CLI, or self-execution. If an external CLI is among the options, the fact that it runs with permissions and sandbox bypassed is disclosed in the same question; choosing it is informed consent.
+3. **Autopilot** — confirmation that the chain now runs to completion unattended. A review pause after the plan is written is available as an explicit opt-in.
+
+### 2. Plan (`dev-write-plan`)
+
+`dev-write-plan` writes one plan per requirement under `plans/`, complete enough for an agent with no conversation context to implement: scope, step-by-step changes with validation commands, done criteria, stop conditions, and an `Execution:` field carrying the mode chosen at the departure check. It never edits source code and never re-asks settled decisions; minor decisions that surface during planning are made following the approved direction and recorded in the plan.
+
+### 3. Execute and review (`dev-execute-plan`)
+
+Three execution modes, in default preference order:
+
+| Mode | When | Notes |
+| --- | --- | --- |
+| Subagent (default) | The host has a subagent/task tool (e.g. Claude Code's `Agent`). | Typically one model tier below the orchestrator; runs inside the host's existing permission envelope, so no extra consent is needed. |
+| External agent CLI | Explicitly chosen at the departure check or by the user. | `codex` / `cursor-agent` / `claude` headless in the current repository, with approvals and sandbox bypassed — which is why it is never auto-selected. |
+| Self-execution | Fallback when no subagent tool exists, or an explicit choice. | The orchestrator implements directly, committing each validated step. |
+
+Regardless of mode, the orchestrator verifies the result itself: it re-runs every done criterion, reads the full diff against the recorded baseline, checks that only in-scope files changed and that nothing is left uncommitted, and reviews tests for meaningful assertions. Delegated work that needs fixes goes back to the executor as concrete revision feedback (at most two rounds) before the plan is marked BLOCKED.
 
 ## Installation
 
@@ -67,44 +97,19 @@ Useful options:
 - `--list`: list the skills available in this repository.
 - `-g`: install globally for reuse across projects.
 
-## Usage
-
-Use `dev-explore` when the requirement is still unclear, the relevant code path is uncertain, or you need to understand the existing architecture and validation workflow first. For open-ended or behavior-changing requests, it also compares approaches and converges on a direction before planning, preferably using structured question tools when the environment provides them. This skill is read-only: it does not create plan files or modify source code.
-
-Use `dev-write-plan` when the requirement is clear enough to turn into executable steps for an agent. The generated plan includes scope, steps, validation commands, completion criteria, and stop conditions.
-
-Use `dev-execute-plan` when an implementation plan already exists under `plans/` and should be applied on the current branch. It checks the working tree, follows the plan, and uses commits plus diffs as review boundaries.
-
-Recommended workflow:
-
-```text
-smart agent: dev-explore -> dev-write-plan
-fast/cheap agent: dev-execute-plan
-lead agent: review the diff and validation results
-```
-
-`dev-execute-plan` can execute the plan directly, or delegate implementation to a detected local agent CLI:
-
-| Agent | How it is used |
-| --- | --- |
-| `codex` | Runs `codex exec` in the current repository. |
-| `cursor` | Runs `cursor-agent` in the current repository. |
-| `claude` | Runs Claude Code in headless mode in the current repository. |
-
-Direct execution by the current agent is always available. Delegation depends on which agent CLIs are installed and authenticated on your machine.
-
-Example prompts:
+## Example prompts
 
 ```text
 Use dev-explore to understand how authentication works in this repo.
-Use dev-explore to inspect the billing flow before we plan changes.
+Use dev-explore to grill me about this refactoring idea before we plan it.
+Use dev-explore to stress-test plans/003 before we execute it.
 
 Use dev-write-plan to plan adding password reset support.
 Use dev-write-plan to turn this bug report into an implementation plan.
 
 Use dev-execute-plan to implement plans/001.
 Use dev-execute-plan to execute the next TODO plan.
-Use dev-execute-plan to delegate plans/002 to a faster local agent and review the result.
+Use dev-execute-plan to delegate plans/002 to codex and review the result.
 ```
 
 ## License

@@ -1,11 +1,11 @@
 # macOS
 .DS_Store
 
-# 编辑器
+# Editors
 .idea/
 .vscode/
 *.swp
 
-# 日志与临时文件
+# Logs and temp files
 *.log
 tmp/
