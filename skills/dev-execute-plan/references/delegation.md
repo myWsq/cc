@@ -12,7 +12,7 @@ The prompt contains:
 
 1. Executor preface:
 
-   > You are executing the implementation plan below. Work step by step. Run each validation command before continuing. Change only in-scope files. Do not edit `plans/README.md`. Stop on any STOP condition. Commit work on the current branch as the plan requires. When finished, report what changed, validation results, commits, and any deviations. Only claim results backed by commands you actually ran.
+   > You are executing the plan below. It is an outcome contract, not a step-by-step script: understand the Requirement and the Decisions & tradeoffs, then design the implementation yourself against the live code. Follow every recorded decision; if you must deviate, say so and justify it in your report. Work milestone by milestone and run each milestone's validation before continuing. Change only in-scope files. Do not edit `plans/README.md`. Stop on any STOP condition. Commit work on the current branch as you go. When finished, report what changed, validation results, commits, and any deviations from the recorded decisions. Only claim results backed by commands you actually ran.
 
 2. Full plan text.
 3. Safety rules:
@@ -49,7 +49,7 @@ python3 "<skill-dir>/scripts/dispatch.py" \
 
 Run dispatch in the background when the host supports it. Poll output for progress. Kill early if the agent is stuck, clearly off-plan, or edits out-of-scope files.
 
-Do not trust the delegated agent’s report as proof. Review `git diff <baseline>..HEAD` and rerun the plan’s done criteria. Also run `git status --porcelain` after the agent exits: uncommitted changes do not appear in the baseline diff, so a non-empty status means unverified work.
+Do not trust the delegated agent’s report as proof. Rerun the plan’s done criteria and run the full code review defined in the skill’s Verify section — the executor made unreviewed design choices, and this review is the only quality gate they pass through. Also run `git status --porcelain` after the agent exits: uncommitted changes do not appear in the baseline diff, so a non-empty status means unverified work.
 
 ## Revise
 
